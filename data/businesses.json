@@ -1,0 +1,12 @@
+[
+    {
+        "name": "The Crab Pot",
+        "address": "1301 Alaskan Way",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": 98101,
+        "phone": "(206) 624-1890",
+        "category": "Food",
+        "subcategory": "Seafood"
+    }
+]

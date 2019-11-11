@@ -1,0 +1,740 @@
+openapi: 3.0.1
+info:
+  version: 1.0.0
+  title: Book-a-Place API
+  description: A simple API for an Airbnb-like application
+  
+components:
+  schemas:
+    Business:
+      description: "An object representing information about a business"
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          description: "Name of the business"
+          example: "The Crab Pot"
+        address:
+          type: "string"
+          description: "The location of the business"
+          example: "1301 Alaskan Way"
+        city:
+          type: "string"
+          description: "The city the business is located at"
+          example: "Seattle"
+        state:
+          type: "string"
+          description: "The state the business is located at"
+          example: "WA"
+        zip:
+          type: "integer"
+          description: "The zip code of the business location"
+          example: 98101
+        phone:
+          type: "string"
+          description: "The main line of the business"
+          example: "(206) 624-1890"
+        category:
+          type: "string"
+          description: "The category of the business"
+          example: "Food"
+        subcategory:
+          type: "string"
+          description: "The subcategroy of the business"
+          example: "Seafood"
+      required: 
+        - name
+        - address
+        - city
+        - state
+        - zip
+        - phone
+    Review:
+      description: "An object representing information about a review"
+      type: "object"
+      properties:
+        star:
+          type: "integer"
+          description: "How amazing is the business from 0-5"
+          example: 3
+        dollar:
+          type: "integer"
+          description: "How expensive the business is from 1-4"
+          example: 4
+        description:
+          type: "string"
+          description: "Detail information about the review"
+          example: "This restaurant is amazing"
+      required: 
+        - star
+        - dollar
+    Photo:
+      description: "An ojbect representing information about a photo"
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          description: "the url of an image"
+          example: "https://cdn.popmenu.com/image/upload/c_limit,f_auto,h_1440,q_auto,w_1440/rq3teqjyxvvxsnjejyu9.jpg"
+        caption:
+          type: "string"
+          description: "the description of the image"
+          example: "The order of Alaskan King Crab"
+      required:
+        - url
+    Error:
+      description: "An object representing an error response from the API"
+      type: "object"
+      properties:
+        err:
+          type: "string"
+          description: "A message describing the error"
+  
+paths:
+  /businesses:
+    get:
+      tags:
+        - businesses
+      summary: "Fetch a list of businesses"
+      description: "Return a paginated list of businesses"
+      operationId: "getBusinesses"
+      parameters: 
+        - name: "page"
+          in: "query"
+          description: "Specifies a specific page of businesses to request"
+          schema:
+            type: "integer"
+            minimum: 1
+            default: 1
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  businesses:
+                    type: "array"
+                    description: "list of businesses"
+                    items:
+                      $ref: '#/components/schemas/Business'
+                  pageNumber:
+                    type: "integer"
+                    description: "the page number of the paged businesses"
+                    example: 1
+                  totalPages:
+                    type: "integer"
+                    description: "the number of paged businesses"
+                    example: 127
+                  pageSize:
+                    type: "integer"
+                    description: "Total number of result businesses per page"
+                    example: 10
+                  totalCount:
+                    type: "integer"
+                    description: "Total number of businesses"
+                    example: 10000
+    post:
+      tags:
+        - businesses
+      summary: "Add a new business"
+      description: "Create a new business with specified data and adds it to the application's database"
+      operationId: "addBusiness"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Business'
+      responses:
+        201:
+          description: "New business succesfully added"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  id:
+                    type: "integer"
+                    description: "ID of the created business"
+                    example: 34
+                  links:
+                    type: "object"
+                    description: "HATEOAS"
+                    properties:
+                      business:
+                        type: "string"
+                        description: "URI for the detail description of the business"
+                        example: "/business/34"
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        
+  /businesses/{businessID}:
+    parameters:
+      - name: "businessID"
+        in: "path"
+        description: "Unique ID of a business"
+        schema:
+          type: "integer"
+          example: 12345
+        required: true
+    get:
+      tags:
+        - businesses
+      summary: "Fetch detail information about a specific business"
+      description: "Returns all information known about the specific business"
+      operationId: "getBusiness"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        404:
+          description: "Specified `businessID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - businesses
+      summary: "Update all information about a specific business"
+      description: "Update all attributes required and any number of optional attributes for a specific business"
+      operationId: "putBusiness"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Business'
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Specified `businessID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - businesses
+      summary: "Update a certain attribute for a specific business"
+      description: "Update an existing business with new information"
+      operationId: "patchBusiness"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: "An object representing information about a business"
+              type: "object"
+              properties:
+                name:
+                  type: "string"
+                  description: "Name of the business"
+                  example: "Microsoft"
+                address:
+                  type: "string"
+                  description: "The location of the headquarter"
+                  example: "Microsoft Visitor Center 15010 NE 36th St."
+                city:
+                  type: "string"
+                  description: "The city the headquarter is located at"
+                  example: "Redmond"
+                state:
+                  type: "string"
+                  description: "The state the headquarter is located at"
+                  example: "Washington"
+                zip:
+                  type: "integer"
+                  description: "The zip code of the headquarter location"
+                  example: 98052
+                phone:
+                  type: "string"
+                  description: "The main line of the business"
+                  example: "1 (800) 642-7676"
+                category:
+                  type: "string"
+                  description: "The category of the business"
+                  example: "Software"
+                subcategory:
+                  type: "string"
+                  description: "The subcategroy of the business"
+                  example: "Computer System"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Specified `businessID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - businesses
+      summary: "Remove a specific business from the database"
+      description: "Completely removes the data for the business specified by `businessID`"
+      operationId: "removeBusiness"
+      responses:
+        204:
+          description: "Success"
+        404:
+          description: "Specified `businessID` not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /businesses/{businessID}/reviews:
+    parameters:
+      - name: "businessID"
+        in: "path"
+        description: "Unique ID of a business"
+        schema:
+          type: "integer"
+          example: 12345
+        required: true
+    post:
+      tags:
+        - businesses
+      summary: "Add a new review for the specific business"
+      description: "Create a new review for the specific business"
+      operationId: "addReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        201:
+          description: "New Review sucessfully added"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties: 
+                  id:
+                    type: "integer"
+                    description: "ID of the created Review"
+                    example: 34
+                  links:
+                    type: "object"
+                    description: "HATEOAS"
+                    properties:
+                      review:
+                        type: "string"
+                        description: "URI for the detail description of the review"
+                        example: "/reviews/34"
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /businesses/{businessID}/photos:
+    parameters:
+      - name: "businessID"
+        in: "path"
+        description: "Unique ID of a business"
+        schema:
+          type: "integer"
+          example: 12345
+        required: true
+    post:
+      tags:
+        - businesses
+      summary: "Add a new photo for the specific business"
+      description: "Create a new photo for the specific business"
+      operationId: "addPhoto"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Photo'
+      responses:
+        201:
+          description: "New Photo sucessfully added"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties: 
+                  id:
+                    type: "integer"
+                    description: "ID of the created Review"
+                    example: 34
+                  links:
+                    type: "object"
+                    description: "HATEOAS"
+                    properties:
+                      review:
+                        type: "string"
+                        description: "URI for the detail description of the photo"
+                        example: "/reviews/34"
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'  
+  /reviews:
+    get:
+      tags:
+        - reviews
+      summary: "Fetch a list of reviews"
+      description: "Return a paginated list of reviews"
+      operationId: "getReviews"
+      parameters:
+        - name: "page"
+          in: "query"
+          description: "Specifies a specific page of reviews to request"
+          schema:
+            type: "integer"
+            minimum: 1
+            default: 1
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  reviews:
+                    type: "array"
+                    description: "list of reviews"
+                    items:
+                      $ref: '#/components/schemas/Review'
+                  pageNumber:
+                    type: "integer"
+                    description: "the page number of the paged reviews"
+                    example: 1
+                  totalPages:
+                    type: "integer"
+                    description: "the number of paged reviews"
+                    example: 127
+                  pageSize:
+                    type: "integer"
+                    description: "Total number of result reviews per page"
+                    example: 10
+                  totalCount:
+                    type: "integer"
+                    description: "Total number of reviews"
+                    example: 10000
+  /reviews/{reviewID}:
+    parameters:
+      - name: "reviewID"
+        in: "path"
+        description: "Unique ID of a review"
+        schema:
+          type: "integer"
+          example: 12345
+        required: true
+    get:
+      tags:
+        - reviews
+      summary: "Fetch detail information about a specific review"
+      description: "Returns all information known about the specific review"
+      operationId: "getReview"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        404:
+          description: "Specified `reviewID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - reviews
+      summary: "Update all information about a specific review"
+      description: "Update all attributes required and any number of optional attributes for a specific review"
+      operationId: "putReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Specified `reviewID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - reviews
+      summary: "Update a certain attribute for a specific review"
+      description: "Update an existing review with new information"
+      operationId: "patchReview"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: "An object representing information about a review"
+              type: "object"
+              properties:
+                star:
+                  type: "integer"
+                  description: "How amazing is the business from 0-5"
+                  example: 3
+                dollar:
+                  type: "integer"
+                  description: "How expensive the business is from 1-4"
+                  example: 4
+                description:
+                  type: "string"
+                  description: "Detail information about the review"
+                  example: "This restaurant is amazing"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Specified `reviewID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - reviews
+      summary: "Remove a specific review from the database"
+      description: "Completely removes the data for the review specified by `reviewID`"
+      operationId: "removeReview"
+      responses:
+        204:
+          description: "Success"
+        404:
+          description: "Specified `reviewID` not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'   
+                    
+                    
+
+
+  /photos:
+    get:
+      tags:
+        - photos
+      summary: "Fetch a list of photos"
+      description: "Return a paginated list of photos"
+      operationId: "getPhotos"
+      parameters:
+        - name: "page"
+          in: "query"
+          description: "Specifies a specific page of photos to request"
+          schema:
+            type: "integer"
+            minimum: 1
+            default: 1
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  reviews:
+                    type: "array"
+                    description: "list of photos"
+                    items:
+                      $ref: '#/components/schemas/Photo'
+                  pageNumber:
+                    type: "integer"
+                    description: "the page number of the paged photos"
+                    example: 1
+                  totalPages:
+                    type: "integer"
+                    description: "the number of paged photos"
+                    example: 127
+                  pageSize:
+                    type: "integer"
+                    description: "Total number of result photos per page"
+                    example: 10
+                  totalCount:
+                    type: "integer"
+                    description: "Total number of photos"
+                    example: 10000
+  /photos/{photoID}:
+    parameters:
+      - name: "photoID"
+        in: "path"
+        description: "Unique ID of a photo"
+        schema:
+          type: "integer"
+          example: 12345
+        required: true
+    get:
+      tags:
+        - photos
+      summary: "Fetch detail information about a specific photo"
+      description: "Returns all information known about the specific photo"
+      operationId: "getPhoto"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        404:
+          description: "Specified `photoID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - photos
+      summary: "Update all information about a specific photo"
+      description: "Update all attributes required and any number of optional attributes for a specific photo"
+      operationId: "putPhoto"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Photo'
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Specified `photoID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - photos
+      summary: "Update a certain attribute for a specific photo"
+      description: "Update an existing photo with new information"
+      operationId: "patchPhoto"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: "An object representing information about a photo"
+              type: "object"
+              properties:
+                url:
+                  type: "string"
+                  description: "the url of an image"
+                  example: "https://cdn.popmenu.com/image/upload/c_limit,f_auto,h_1440,q_auto,w_1440/rq3teqjyxvvxsnjejyu9.jpg"
+                caption:
+                  type: "string"
+                  description: "the description of the image"
+                  example: "The order of Alaskan King Crab"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        400:
+          description: "Incorrectly-formatted request body"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Specified `reviewID` does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - photos
+      summary: "Remove a specific photo from the database"
+      description: "Completely removes the data for the photo specified by `photoID`"
+      operationId: "removePhoto"
+      responses:
+        204:
+          description: "Success"
+        404:
+          description: "Specified `photoID` not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'   
+    
+      
+    
+  
+                    
